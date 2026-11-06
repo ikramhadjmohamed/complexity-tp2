@@ -1,18 +1,18 @@
-void MaxEtMinA(int T[], int n, int *max, int *min, int *compteur)
+void MaxEtMinA(int T[], int n, int *max, int *min, int *comp)
 {
+    int i;
+
     *max = T[0];
     *min = T[0];
-    *compteur = 0;
+    *comp = 0;
 
-    for (int i = 1; i < n; i++)
+    for (i = 1; i < n; i++)
     {
-        (*compteur)++;
-
+        (*comp)++;
         if (T[i] > *max)
             *max = T[i];
 
-        (*compteur)++;
-
+        (*comp)++;
         if (T[i] < *min)
             *min = T[i];
     }

@@ -49,8 +49,9 @@ int main(void) {
     int nb = sizeof(tailles) / sizeof(tailles[0]);
     char nom[100];
 
-    srand(42);  // graine fixe : memes donnees a chaque execution
+    srand(42);  // graine fixe
 
+    // Boucle 1 : les 10 tailles (trie + non trie)
     for (int k = 0; k < nb; k++) {
         sprintf(nom, "data\\trie_%d.txt", tailles[k]);
         generer_trie(tailles[k], nom);
@@ -60,5 +61,16 @@ int main(void) {
 
         printf("n = %d : OK\n", tailles[k]);
     }
+
+    // Boucle 2 : tailles supplementaires pour la partie B (non trie seulement)
+    int tailles_sup[] = {2000000, 4000000, 6000000, 8000000};
+    int nb_sup = sizeof(tailles_sup) / sizeof(tailles_sup[0]);
+
+    for (int k = 0; k < nb_sup; k++) {
+        sprintf(nom, "data\\nontrie_%d.txt", tailles_sup[k]);
+        generer_nontrie(tailles_sup[k], nom);
+        printf("n = %d : OK\n", tailles_sup[k]);
+    }
+
     return 0;
 }
