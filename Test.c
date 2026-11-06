@@ -43,34 +43,53 @@ double mesurer(FctRech f, int T[], int n, int x, long reps) {
     return (double)(fin - debut) / CLOCKS_PER_SEC / reps;
 }
 
+void ligne(FILE *csv, int n, const char *fct, const char *cas, double t) {
+    fprintf(csv, "%d;%s;%s;%.9f\n", n, fct, cas, t);
+    printf("n=%d  %s  %s : %.9f s\n", n, fct, cas, t);
+}
+
 int main(void) {
-    int n = 100000;
+    int tailles[] = {100000, 200000, 400000, 600000, 800000,
+                     1000000, 1200000, 1400000, 1600000, 1800000};
+    int nb = sizeof(tailles) / sizeof(tailles[0]);
     char nom[100];
 
-    sprintf(nom, "data\\nontrie_%d.txt", n);
-    int *NT = lire_fichier(nom, n);
-    sprintf(nom, "data\\trie_%d.txt", n);
-    int *TR = lire_fichier(nom, n);
-    if (NT == NULL || TR == NULL) return 1;
+    FILE *csv = fopen("Resultats_experimentaux\\resultats.csv", "w");
+    if (csv == NULL) {
+        printf("Erreur : impossible de creer resultats.csv\n");
+        return 1;
+    }
+    fprintf(csv, "n;fonction;cas;temps_s\n");
 
-    printf("n = %d\n\n", n);
+    for (int k = 0; k < nb; k++) {
+        int n = tailles[k];
 
-    printf("--- Non trie ---\n");
-    printf("Meilleur (x=T[0])       : %.9f s\n", mesurer(rechElets_TabNonTries, NT, n, NT[0],     10000000L));
-    printf("Pire (x absent)         : %.9f s\n", mesurer(rechElets_TabNonTries, NT, n, -1,        1000L));
-    printf("Pire (x=T[n-1])         : %.9f s\n", mesurer(rechElets_TabNonTries, NT, n, NT[n - 1], 1000L));
+        sprintf(nom, "data\\nontrie_%d.txt", n);
+        int *NT = lire_fichier(nom, n);
+        sprintf(nom, "data\\trie_%d.txt", n);
+        int *TR = lire_fichier(nom, n);
+        if (NT == NULL || TR == NULL) { fclose(csv); return 1; }
 
-    printf("\n--- Trie, sequentiel ---\n");
-    printf("Meilleur (x=T[0])       : %.9f s\n", mesurer(rechElets_TabTries, TR, n, TR[0],     10000000L));
-    printf("Pire (x absent > max)   : %.9f s\n", mesurer(rechElets_TabTries, TR, n, 2 * n,     1000L));
-    printf("Pire (x=T[n-1])         : %.9f s\n", mesurer(rechElets_TabTries, TR, n, TR[n - 1], 1000L));
+        // Non trie
+        ligne(csv, n, "NonTrie", "meilleur",     mesurer(rechElets_TabNonTries, NT, n, NT[0],     10000000L));
+        ligne(csv, n, "NonTrie", "pire_absent",  mesurer(rechElets_TabNonTries, NT, n, -1,        200L));
+        ligne(csv, n, "NonTrie", "pire_dernier", mesurer(rechElets_TabNonTries, NT, n, NT[n - 1], 200L));
 
-    printf("\n--- Dichotomie ---\n");
-    printf("Meilleur (x au milieu)  : %.9f s\n", mesurer(rechElets_Dicho, TR, n, TR[(n - 1) / 2], 10000000L));
-    printf("Pire (x absent)         : %.9f s\n", mesurer(rechElets_Dicho, TR, n, -1,              10000000L));
-    printf("Pire (x=T[0], dernier decoupage) : %.9f s\n", mesurer(rechElets_Dicho, TR, n, TR[0],  10000000L));
+        // Trie sequentiel
+        ligne(csv, n, "TrieSeq", "meilleur",     mesurer(rechElets_TabTries, TR, n, TR[0],     10000000L));
+        ligne(csv, n, "TrieSeq", "pire_absent",  mesurer(rechElets_TabTries, TR, n, 2 * n,     200L));
+        ligne(csv, n, "TrieSeq", "pire_dernier", mesurer(rechElets_TabTries, TR, n, TR[n - 1], 200L));
 
-    free(NT);
-    free(TR);
+        // Dichotomie
+        ligne(csv, n, "Dicho", "meilleur",     mesurer(rechElets_Dicho, TR, n, TR[(n - 1) / 2], 5000000L));
+        ligne(csv, n, "Dicho", "pire_absent",  mesurer(rechElets_Dicho, TR, n, -1,              5000000L));
+        ligne(csv, n, "Dicho", "pire_dernier", mesurer(rechElets_Dicho, TR, n, TR[0],           5000000L));
+
+        free(NT);
+        free(TR);
+    }
+
+    fclose(csv);
+    printf("\nTermine : Resultats_experimentaux\\resultats.csv\n");
     return 0;
 }
