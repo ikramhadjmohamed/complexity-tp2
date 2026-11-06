@@ -33,14 +33,21 @@ int *lire_fichier(const char *nom_fichier, int n) {
 // Temps moyen d'UNE recherche
 typedef int (*FctRech)(int[], int, int);
 
-double mesurer(FctRech f, int T[], int n, int x, long reps) {
+double mesurer(FctRech f, int T[], int n, int x) {
     volatile int resultat;
-    clock_t debut = clock();
-    for (long k = 0; k < reps; k++) {
-        resultat = f(T, n, x);
+    clock_t d = clock();
+    resultat = f(T, n, x);
+    double t = (double)(clock() - d) / CLOCKS_PER_SEC;
+    if (t >= 0.05) return t;
+
+    long reps = 100;
+    for (;;) {
+        d = clock();
+        for (long r = 0; r < reps; r++) resultat = f(T, n, x);
+        t = (double)(clock() - d) / CLOCKS_PER_SEC;
+        if (t >= 0.05 || reps >= 1000000000L) return t / reps;
+        reps *= 10;
     }
-    clock_t fin = clock();
-    return (double)(fin - debut) / CLOCKS_PER_SEC / reps;
 }
 
 void ligne(FILE *csv, int n, const char *fct, const char *cas, double t) {
@@ -71,19 +78,19 @@ int main(void) {
         if (NT == NULL || TR == NULL) { fclose(csv); return 1; }
 
         // Non trie
-        ligne(csv, n, "NonTrie", "meilleur",     mesurer(rechElets_TabNonTries, NT, n, NT[0],     10000000L));
-        ligne(csv, n, "NonTrie", "pire_absent",  mesurer(rechElets_TabNonTries, NT, n, -1,        200L));
-        ligne(csv, n, "NonTrie", "pire_dernier", mesurer(rechElets_TabNonTries, NT, n, NT[n - 1], 200L));
+        ligne(csv, n, "NonTrie", "meilleur",     mesurer(rechElets_TabNonTries, NT, n, NT[0]));
+        ligne(csv, n, "NonTrie", "pire_absent",  mesurer(rechElets_TabNonTries, NT, n, -1));
+        ligne(csv, n, "NonTrie", "pire_dernier", mesurer(rechElets_TabNonTries, NT, n, NT[n - 1]));
 
         // Trie sequentiel
-        ligne(csv, n, "TrieSeq", "meilleur",     mesurer(rechElets_TabTries, TR, n, TR[0],     10000000L));
-        ligne(csv, n, "TrieSeq", "pire_absent",  mesurer(rechElets_TabTries, TR, n, 2 * n,     200L));
-        ligne(csv, n, "TrieSeq", "pire_dernier", mesurer(rechElets_TabTries, TR, n, TR[n - 1], 200L));
+        ligne(csv, n, "TrieSeq", "meilleur",     mesurer(rechElets_TabTries, TR, n, TR[0]));
+        ligne(csv, n, "TrieSeq", "pire_absent",  mesurer(rechElets_TabTries, TR, n, 2 * n));
+        ligne(csv, n, "TrieSeq", "pire_dernier", mesurer(rechElets_TabTries, TR, n, TR[n - 1]));
 
         // Dichotomie
-        ligne(csv, n, "Dicho", "meilleur",     mesurer(rechElets_Dicho, TR, n, TR[(n - 1) / 2], 5000000L));
-        ligne(csv, n, "Dicho", "pire_absent",  mesurer(rechElets_Dicho, TR, n, -1,              5000000L));
-        ligne(csv, n, "Dicho", "pire_dernier", mesurer(rechElets_Dicho, TR, n, TR[0],           5000000L));
+        ligne(csv, n, "Dicho", "meilleur",     mesurer(rechElets_Dicho, TR, n, TR[(n - 1) / 2]));
+        ligne(csv, n, "Dicho", "pire_absent",  mesurer(rechElets_Dicho, TR, n, -1));
+        ligne(csv, n, "Dicho", "pire_dernier", mesurer(rechElets_Dicho, TR, n, TR[0]));
 
         free(NT);
         free(TR);
