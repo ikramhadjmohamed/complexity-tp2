@@ -7,9 +7,8 @@ int generer_trie(int n, const char *nom_fichier) {
         printf("Erreur : impossible de creer %s\n", nom_fichier);
         return 0;
     }
-    fprintf(f, "%d\n", n);          // 1re ligne : la taille n
     for (int i = 0; i < n; i++) {
-        fprintf(f, "%d\n", 2 * i);  // une valeur par ligne
+        fprintf(f, "%d\n", 2 * i);  
     }
     fclose(f);
     return 1;
