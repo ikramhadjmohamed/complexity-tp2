@@ -1,8 +1,5 @@
 # TP2 : Recherche d'éléments, maximum et minimum
 
-Module : Algorithmique avancée et complexité (Master 1), USTHB
-Auteur : [Nom Prénom]
-
 ## Objectif
 
 Étudier expérimentalement la complexité de :
