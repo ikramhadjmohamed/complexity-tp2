@@ -89,6 +89,63 @@ Fichiers dans `data\`, une valeur par ligne, exactement n valeurs (pas d'en-têt
 
 Pour la dichotomie, la variante 2 est l'élément trouvé au dernier découpage.
 
+## Complexité théorique
+
+On compte le nombre de comparaisons entre éléments, en fonction de n.
+
+### Partie A : recherche d'un élément
+
+| Fonction | Meilleur cas | Pire cas |
+|---|---|---|
+| Non trié | 1 comparaison (x = `T[0]`), O(1) | n comparaisons (x absent ou dernier), O(n) |
+| Trié séquentiel | 1 comparaison (x = `T[0]`), O(1) | n tours de boucle (x absent et supérieur au max, ou dernier), O(n) |
+| Dichotomie | 1 comparaison (x au milieu), O(1) | environ log2(n) étapes, O(log n) |
+
+**Dichotomie, pire cas.** À chaque étape, la zone de recherche est divisée par 2 :
+n, n/2, n/4, ..., 1. Le nombre d'étapes k est le plus petit entier tel que n / 2^k < 1,
+c'est-à-dire k = partie entière de log2(n) + 1.
+
+- n = 100 000 : environ 17 étapes
+- n = 1 800 000 : environ 21 étapes
+
+### Partie B : maximum et minimum
+
+**MaxEtMinA (naïf).** On initialise max et min avec `T[0]`, puis, pour chacun des
+n-1 éléments restants, on fait 2 comparaisons (une avec le max, une avec le min) :
+
+    comparaisons = 2(n - 1)
+
+Le résultat est le même quelles que soient les valeurs (pas de meilleur ni de pire cas).
+
+**MaxEtMinB (par paires), n pair.**
+
+1. On compare les éléments deux à deux : n/2 comparaisons.
+2. Le minimum se cherche parmi les n/2 petits : n/2 - 1 comparaisons.
+3. Le maximum se cherche parmi les n/2 grands : n/2 - 1 comparaisons.
+
+        comparaisons = n/2 + 2(n/2 - 1) = 3n/2 - 2
+
+Pour n impair, le dernier élément est comparé au min et au max (2 comparaisons de plus)
+et on obtient 3(n-1)/2.
+
+| n | MaxEtMinA : 2(n-1) | MaxEtMinB : 3n/2 - 2 |
+|---|---|---|
+| 100 000 | 199 998 | 149 998 |
+| 8 000 000 | 15 999 998 | 11 999 998 |
+
+Le rapport B / A tend vers 3/4 : MaxEtMinB fait environ 25 % de comparaisons en moins.
+Les deux algorithmes restent en O(n).
+
+## Vérification expérimentale
+
+Les valeurs de comparaisons mesurées (`comp_A`, `comp_B`) sont **identiques** aux formules
+ci-dessus pour les 14 tailles : le compteur confirme le calcul théorique.
+
+Pour les temps, le calcul « temps par élément » (temps / n) permet de vérifier la linéarité :
+si ce rapport reste à peu près constant quand n augmente, la complexité est bien O(n).
+Par exemple, pour la recherche séquentielle en pire cas, 250 µs pour 100 000 éléments
+donnent environ 2,5 ns par comparaison.
+
 ## Résultats
 
 ### Partie A : `Resultats_experimentaux\resultats.csv`
@@ -116,8 +173,25 @@ Colonnes : `n;comp_A;comp_B;temps_A_s;temps_B_s` (une ligne par taille, 14 ligne
 
 - `MaxEtMinA` fait 2(n-1) comparaisons et `MaxEtMinB` environ 3n/2 - 2 (par exemple
   199998 et 149998 pour n = 100000), soit environ 25 % de comparaisons en moins.
-- Temps : [à compléter à partir de `resultatsB.csv`].
+- Temps : les deux courbes sont des droites, donc les deux algorithmes sont en O(n).
+  MaxEtMinB est cependant plus lent que MaxEtMinA (environ 41 ms contre 23 ms pour
+  n = 8 000 000, valeurs lues sur le graphe), bien qu'il fasse moins de comparaisons.
+  [Vérifier ces valeurs dans `resultatsB.csv`.]
+- Explication possible (non vérifiée) : MaxEtMinB effectue des échanges et des écritures
+  dans le tableau, et son test `T[i] > T[i+1]` est imprévisible sur des données
+  aléatoires, ce qui ralentit le processeur. Dans MaxEtMinA, le test `T[i] > max` est
+  presque toujours faux, donc plus facile à prédire.
 
 ## Conclusion
 
-[À compléter : comparaison théorie et expérience pour les parties A et B.]
+## Conclusion
+
+- **Partie A.** Les mesures confirment la théorie : la recherche séquentielle est en O(n)
+  (le temps est multiplié par environ 19 à 21 quand n est multiplié par 18), la dichotomie
+  en O(log n) est plusieurs milliers de fois plus rapide, mais elle exige un tableau trié.
+  Le meilleur cas est constant (O(1)) pour les trois fonctions.
+- **Partie B.** MaxEtMinB réduit le nombre de comparaisons de 2n à 3n/2, mais cela ne se
+  traduit pas par un gain de temps sur notre machine : le nombre de comparaisons ne suffit
+  pas à prédire le temps réel. Les deux algorithmes ont la même complexité asymptotique, O(n).
+- **Remarque générale.** Dans ce TP, la complexité dépend de n (le nombre d'éléments) et
+  non des valeurs, contrairement au TP1 où elle dépendait de la valeur de N.
